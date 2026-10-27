@@ -65,7 +65,12 @@ public class CheckController {
         if (!limiter.tryAcquire(request.getRemoteAddr())) {
             return tooMany();
         }
-        String dataUrl = Images.toDataUrl(image.getBytes(), contentType);
+        String dataUrl;
+        try {
+            dataUrl = Images.toDataUrl(image.getBytes(), contentType);
+        } catch (Images.ImageTooLargeException e) {
+            return error(HttpStatus.BAD_REQUEST, "This photo is too large. Take a normal phone photo of the strip and try again.");
+        }
         return stream(events -> checks.checkPhoto(dataUrl, language(lang), events));
     }
 
