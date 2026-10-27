@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: dawaguard
+  config:
+    # Local secrets live in .env (git-ignored). See .env.example.
+    import: optional:file:.env[.properties]
+  datasource:
+    url: jdbc:h2:file:./data/dawaguard;AUTO_SERVER=TRUE
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+
+dawaguard:
+  nebius:
+    base-url: https://api.tokenfactory.nebius.com/v1
+    api-key: ${NEBIUS_API_KEY:}
+    models:
+      # Reads medicine strips (image -> structured fields)
+      vision: ${MODEL_VISION:nvidia/Nemotron-3.5-Super-VL}
+      # Explains the verdict, weighs evidence, writes the family-facing answer
+      reasoning: ${MODEL_REASONING:nvidia/Nemotron-3-Ultra-550b-a55b}
+      # Fast chat routing, translation, reminders
+      fast: ${MODEL_FAST:nvidia/Nemotron-3_5-Lightning}
+  tavily:
+    base-url: https://api.tavily.com
+    api-key: ${TAVILY_API_KEY:}
+  cdsco:
+    base-url: https://cdscoonline.gov.in/CDSCO
+    sync-from: 2025-01
+    sync-on-startup: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
