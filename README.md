@@ -32,8 +32,12 @@ cp .env.example .env   # then add NEBIUS_API_KEY and TAVILY_API_KEY
 Then open:
 
 - `http://localhost:8080/api/status`: loaded CDSCO data and freshness
-- `http://localhost:8080/api/status/models`: one test call to each Nemotron model
 - `http://localhost:8080/api/batches/{batchNo}`: look up a batch number
+
+With `DIAGNOSTICS_ENABLED=true` in `.env` (local only, these spend API credits):
+
+- `http://localhost:8080/api/diagnostics/models`: one test call to each Nemotron model
+- `http://localhost:8080/api/diagnostics/search`: one Tavily search
 
 ## Data source
 
