@@ -69,6 +69,7 @@ public class WhatsAppBot {
 
     void handle(WebhookPayload.Message m) {
         WhatsAppUser user = touch(m);
+        log.info("WhatsApp {} message from ...{}", m.type(), m.from().substring(Math.max(0, m.from().length() - 4)));
         try {
             client.markReadAndShowTyping(m.id());
             switch (m.type() == null ? "" : m.type()) {
@@ -159,6 +160,7 @@ public class WhatsAppBot {
             return;
         }
         StripReading reading = result.reading();
+        log.info("WhatsApp check finished: {}", result.verdict());
         String medicine = reading.brandName() != null ? reading.brandName() : reading.genericName();
         reply(user, result.whatsappMessage() != null ? result.whatsappMessage()
                 : Replies.fallback(result.verdict(), medicine, reading.batchNo(), lang));

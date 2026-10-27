@@ -54,7 +54,12 @@ public class WhatsAppWebhookController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         try {
-            json.readValue(body, WebhookPayload.class).messages().forEach(bot::accept);
+            WebhookPayload payload = json.readValue(body, WebhookPayload.class);
+            if (payload.entry() != null) {
+                // entry.id is the WhatsApp Business Account the message arrived on (templates live under it).
+                payload.entry().forEach(e -> log.info("WhatsApp webhook from business account {}", e.id()));
+            }
+            payload.messages().forEach(bot::accept);
         } catch (RuntimeException e) {
             // Answer 200 anyway: an error makes Meta redeliver the same unreadable body for days.
             log.warn("Could not read a WhatsApp webhook: {}", e.getMessage());
