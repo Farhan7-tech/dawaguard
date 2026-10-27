@@ -3,117 +3,236 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>DawaGuard</title>
-  <meta name="description" content="Check a medicine batch against India's CDSCO quality-failure and spurious-drug alerts.">
+  <title>DawaGuard: check a medicine batch</title>
+  <meta name="description" content="Photograph a medicine strip and check its batch against India's CDSCO quality-failure and spurious-drug alerts.">
+  <meta name="theme-color" content="#0f766e">
+  <meta property="og:title" content="DawaGuard">
+  <meta property="og:description" content="Check a medicine batch against India's CDSCO quality-failure and spurious-drug alerts.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230f766e'/%3E%3Cpath d='M13 8h6v5h5v6h-5v5h-6v-5H8v-6h5z' fill='white'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Doto:wght@800&family=Hind:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500;600&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="app.css">
 </head>
 <body>
-  <header class="top">
-    <a class="brand" href="/">DawaGuard</a>
-    <div class="lang" role="group" aria-label="Language">
-      <button type="button" data-lang="en" aria-pressed="true">English</button>
-      <button type="button" data-lang="hi" aria-pressed="false">हिंदी</button>
+  <a class="skip-link" href="#main" data-i18n="skip">Skip to content</a>
+
+  <header class="appbar">
+    <div class="appbar__inner">
+      <a class="logo" href="/" aria-label="DawaGuard home">
+        <svg class="logo__mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8"/><path d="M13 8h6v5h5v6h-5v5h-6v-5H8v-6h5z"/></svg>
+        <span class="logo__name">DawaGuard</span>
+      </a>
+      <p class="freshness" id="freshness" hidden>
+        <span class="freshness__dot" aria-hidden="true"></span>
+        <span id="freshnessText"></span>
+      </p>
+      <div class="segmented" role="group" aria-label="Language">
+        <button type="button" class="segmented__option" data-lang="en" aria-pressed="true">English</button>
+        <button type="button" class="segmented__option" data-lang="hi" aria-pressed="false">हिंदी</button>
+      </div>
     </div>
   </header>
 
-  <main>
-    <section class="intro">
-      <h1 data-i18n="title">Is this medicine batch safe?</h1>
-      <p class="lede" data-i18n="lede">Take a photo of the strip. DawaGuard reads the batch number and checks it against the government's lists of medicine batches that failed quality tests or are suspected fakes.</p>
-    </section>
+  <main id="main" class="layout">
+    <!-- New check -->
+    <aside class="panel" aria-labelledby="checkTitle">
+      <div class="panel__intro">
+        <h1 id="checkTitle" class="panel__title" data-i18n="checkTitle">Check a medicine</h1>
+        <p class="panel__text" data-i18n="checkText">Find out if a medicine batch failed a government quality test or is a suspected fake.</p>
+      </div>
 
-    <section class="strip" aria-labelledby="photo-label">
-      <h2 id="photo-label" class="visually-hidden" data-i18n="photoLabel">Medicine photo</h2>
-      <div class="foil">
-        <img id="preview" alt="" hidden>
-        <label class="shoot">
-          <input id="photo" type="file" accept="image/*" capture="environment">
-          <span data-i18n="takePhoto">Take or choose a photo</span>
+      <div class="tabs" role="tablist" aria-label="Check method">
+        <button type="button" class="tabs__tab" role="tab" id="tab-photo" aria-controls="pane-photo" aria-selected="true" data-i18n="tabPhoto">Photo</button>
+        <button type="button" class="tabs__tab" role="tab" id="tab-batch" aria-controls="pane-batch" aria-selected="false" tabindex="-1" data-i18n="tabBatch">Batch number</button>
+      </div>
+
+      <div id="pane-photo" class="pane" role="tabpanel" aria-labelledby="tab-photo">
+        <label class="dropzone" id="dropzone">
+          <input id="photo" class="dropzone__input" type="file" accept="image/*" capture="environment">
+          <img id="preview" class="dropzone__preview" alt="" hidden>
+          <span class="dropzone__empty" id="dropzoneEmpty">
+            <svg class="icon icon--lg" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+            <span class="dropzone__title" data-i18n="dropTitle">Take or upload a photo</span>
+            <span class="dropzone__hint" data-i18n="dropHint">The batch number (B.No.) and expiry date should be sharp and readable.</span>
+          </span>
         </label>
-        <p class="hint" data-i18n="hint">Make sure the batch number (B.No.) and expiry date are sharp.</p>
-      </div>
-      <div class="samples">
-        <p data-i18n="samplesLabel">No strip nearby? Try a sample:</p>
-        <ul>
-          <li><button type="button" data-sample="flagged-pantoprazole.jpg"><img src="samples/flagged-pantoprazole.jpg" alt=""><span data-i18n="sampleFlagged">Failed batch</span></button></li>
-          <li><button type="button" data-sample="safe-paracetamol.jpg"><img src="samples/safe-paracetamol.jpg" alt=""><span data-i18n="sampleSafe">Clear batch</span></button></li>
-          <li><button type="button" data-sample="expired-cetirizine.jpg"><img src="samples/expired-cetirizine.jpg" alt=""><span data-i18n="sampleExpired">Expired</span></button></li>
-        </ul>
-      </div>
-      <form id="typed" class="typed">
-        <label for="batch" data-i18n="typeLabel">Or type the batch number</label>
-        <div class="row">
-          <input id="batch" name="batch" autocomplete="off" spellcheck="false" maxlength="40" placeholder="TG25-1814A">
-          <button type="submit" data-i18n="checkBatch">Check batch</button>
+
+        <div class="samples">
+          <p class="field-label" data-i18n="samplesLabel">No strip with you? Try a sample</p>
+          <ul class="samples__list">
+            <li>
+              <button type="button" class="sample" data-sample="flagged-pantoprazole.jpg">
+                <img class="sample__thumb" src="samples/flagged-pantoprazole.jpg" alt="">
+                <span class="sample__text"><span class="sample__title" data-i18n="sampleFlaggedTitle">Pansid-40</span><span class="sample__meta" data-i18n="sampleFlagged">Batch on a CDSCO alert</span></span>
+              </button>
+            </li>
+            <li>
+              <button type="button" class="sample" data-sample="safe-paracetamol.jpg">
+                <img class="sample__thumb" src="samples/safe-paracetamol.jpg" alt="">
+                <span class="sample__text"><span class="sample__title" data-i18n="sampleSafeTitle">Demopar 500</span><span class="sample__meta" data-i18n="sampleSafe">Batch not on any alert</span></span>
+              </button>
+            </li>
+            <li>
+              <button type="button" class="sample" data-sample="expired-cetirizine.jpg">
+                <img class="sample__thumb" src="samples/expired-cetirizine.jpg" alt="">
+                <span class="sample__text"><span class="sample__title" data-i18n="sampleExpiredTitle">Democet 10</span><span class="sample__meta" data-i18n="sampleExpired">Past its expiry date</span></span>
+              </button>
+            </li>
+          </ul>
         </div>
+      </div>
+
+      <form id="pane-batch" class="pane" role="tabpanel" aria-labelledby="tab-batch" hidden novalidate>
+        <div class="field">
+          <label class="field-label" for="batch" data-i18n="batchLabel">Batch number</label>
+          <input id="batch" class="input input--mono" autocomplete="off" spellcheck="false" maxlength="40" placeholder="TG25-1814A" aria-describedby="batchHelp">
+          <p id="batchHelp" class="field-help" data-i18n="batchHelp">Printed after "B.No." or "Batch" on the strip.</p>
+        </div>
+        <div class="field">
+          <label class="field-label" for="brand"><span data-i18n="brandLabel">Medicine name</span> <span class="field-optional" data-i18n="optional">Optional</span></label>
+          <input id="brand" class="input" autocomplete="off" maxlength="120" placeholder="Pansid-40">
+          <p class="field-help" data-i18n="brandHelp">Helps confirm the batch belongs to your medicine.</p>
+        </div>
+        <button type="submit" class="button button--primary button--block" data-i18n="checkBatch">Check batch</button>
       </form>
-    </section>
 
-    <section id="progress" class="progress" hidden aria-live="polite">
-      <h2 data-i18n="progressTitle">Checking</h2>
-      <ol>
-        <li data-step="read"><span class="what" data-i18n="stepRead">Reading the strip</span><span class="who">Nemotron 3.5 Super VL</span><span class="state"></span></li>
-        <li data-step="match"><span class="what" data-i18n="stepMatch">Matching government alerts</span><span class="who">CDSCO data</span><span class="state"></span></li>
-        <li data-step="verify"><span class="what" data-i18n="stepVerify">Looking for newer alerts</span><span class="who">Tavily</span><span class="state"></span></li>
-        <li data-step="explain"><span class="what" data-i18n="stepExplain">Explaining the result</span><span class="who">Nemotron 3 Ultra</span><span class="state"></span></li>
-        <li data-step="message"><span class="what" data-i18n="stepMessage">Writing a WhatsApp message</span><span class="who">Nemotron 3.5 Lightning</span><span class="state"></span></li>
-      </ol>
-    </section>
+      <p class="panel__note" data-i18n="panelNote">DawaGuard is a safety check, not medical advice. Don't stop a medicine without talking to your doctor or pharmacist.</p>
+    </aside>
 
-    <p id="error" class="error" role="alert" hidden></p>
-
-    <section id="result" class="result" hidden>
-      <div id="stamp" class="stamp"></div>
-      <h2 id="headline" class="headline"></h2>
-      <p id="explanation" class="explanation"></p>
-      <ol id="steps" class="next"></ol>
-
-      <div class="read">
-        <h3 data-i18n="readTitle">What DawaGuard read</h3>
-        <p class="batchline"><span data-i18n="batchNo">Batch number</span> <span id="readBatch" class="dots"></span></p>
-        <dl id="readFields"></dl>
-        <form id="recheck" class="typed compact">
-          <label for="fixBatch" data-i18n="fixLabel">Wrong batch number? Correct it and check again</label>
-          <div class="row">
-            <input id="fixBatch" autocomplete="off" spellcheck="false" maxlength="40">
-            <button type="submit" data-i18n="recheck">Check again</button>
-          </div>
-        </form>
-        <p id="otherProducts" class="note" hidden></p>
+    <!-- Results -->
+    <section class="results" aria-label="Results">
+      <div id="empty" class="card empty">
+        <h2 class="card__title" data-i18n="emptyTitle">How the check works</h2>
+        <ol class="howto">
+          <li class="howto__item">
+            <span class="howto__num">1</span>
+            <div><p class="howto__title" data-i18n="how1Title">Read the strip</p><p class="howto__text" data-i18n="how1Text">NVIDIA Nemotron reads the medicine name, batch number and expiry date from your photo.</p></div>
+          </li>
+          <li class="howto__item">
+            <span class="howto__num">2</span>
+            <div><p class="howto__title" data-i18n="how2Title">Match government alerts</p><p class="howto__text" data-i18n="how2Text">The batch is matched against every batch CDSCO has reported as failing a lab test or as spurious, and checked for newer alerts online.</p></div>
+          </li>
+          <li class="howto__item">
+            <span class="howto__num">3</span>
+            <div><p class="howto__title" data-i18n="how3Title">Explain what to do</p><p class="howto__text" data-i18n="how3Text">You get a clear answer with the official source, safe next steps, and a message you can send to family on WhatsApp.</p></div>
+          </li>
+        </ol>
+        <dl class="stats" id="stats" hidden>
+          <div class="stats__item"><dt data-i18n="statFailed">Failed batches</dt><dd id="statFailed" class="tabular"></dd></div>
+          <div class="stats__item"><dt data-i18n="statFake">Suspected fakes</dt><dd id="statFake" class="tabular"></dd></div>
+          <div class="stats__item"><dt data-i18n="statUpdated">Latest alert</dt><dd id="statUpdated"></dd></div>
+        </dl>
       </div>
 
-      <div id="whatsappBox" class="whatsapp" hidden>
-        <h3 data-i18n="waTitle">Send to family</h3>
-        <p id="whatsapp" class="bubble"></p>
-        <div class="row">
-          <button id="copyWa" type="button" data-i18n="copy">Copy message</button>
-          <a id="openWa" class="button secondary" target="_blank" rel="noopener" data-i18n="openWa">Open WhatsApp</a>
+      <div id="progress" class="card" hidden aria-live="polite">
+        <div class="card__header">
+          <h2 class="card__title" data-i18n="progressTitle">Checking your medicine</h2>
+          <span class="badge badge--neutral" id="progressBadge" data-i18n="inProgress">In progress</span>
         </div>
+        <ol class="stepper">
+          <li class="stepper__step" data-step="read"><span class="stepper__marker" aria-hidden="true"></span><span class="stepper__label" data-i18n="stepRead">Read strip</span><span class="stepper__engine">Nemotron 3.5 Super VL</span><span class="stepper__time"></span></li>
+          <li class="stepper__step" data-step="match"><span class="stepper__marker" aria-hidden="true"></span><span class="stepper__label" data-i18n="stepMatch">Match alerts</span><span class="stepper__engine">CDSCO data</span><span class="stepper__time"></span></li>
+          <li class="stepper__step" data-step="verify"><span class="stepper__marker" aria-hidden="true"></span><span class="stepper__label" data-i18n="stepVerify">Search news</span><span class="stepper__engine">Tavily</span><span class="stepper__time"></span></li>
+          <li class="stepper__step" data-step="explain"><span class="stepper__marker" aria-hidden="true"></span><span class="stepper__label" data-i18n="stepExplain">Explain</span><span class="stepper__engine">Nemotron 3 Ultra</span><span class="stepper__time"></span></li>
+          <li class="stepper__step" data-step="message"><span class="stepper__marker" aria-hidden="true"></span><span class="stepper__label" data-i18n="stepMessage">WhatsApp text</span><span class="stepper__engine">Nemotron 3.5 Lightning</span><span class="stepper__time"></span></li>
+        </ol>
       </div>
 
-      <div class="sources">
-        <h3 data-i18n="sourcesTitle">Sources</h3>
-        <ol id="sources"></ol>
+      <div id="error" class="alert" role="alert" hidden>
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><path d="M12 16.5v.01"/></svg>
+        <p id="errorText"></p>
       </div>
 
-      <details class="trace">
-        <summary data-i18n="traceTitle">Which model did what</summary>
-        <table>
-          <thead><tr><th data-i18n="thStep">Step</th><th data-i18n="thEngine">Model or tool</th><th data-i18n="thTime">Time</th><th data-i18n="thTokens">Tokens</th></tr></thead>
-          <tbody id="trace"></tbody>
-        </table>
-        <p class="note" data-i18n="traceNote">The verdict comes from DawaGuard's own check of CDSCO data. The language models only read the photo and explain the result.</p>
-      </details>
+      <div id="result" class="result" hidden>
+        <article id="verdict" class="verdict">
+          <div class="verdict__icon" id="verdictIcon" aria-hidden="true"></div>
+          <div class="verdict__body">
+            <p class="verdict__status" id="verdictStatus"></p>
+            <h2 class="verdict__headline" id="headline"></h2>
+            <p class="verdict__text" id="explanation"></p>
+          </div>
+        </article>
+
+        <section class="card" aria-labelledby="stepsTitle" id="stepsCard">
+          <h3 class="card__title" id="stepsTitle" data-i18n="stepsTitle">What to do next</h3>
+          <ol class="checklist" id="steps"></ol>
+        </section>
+
+        <div class="result__grid">
+          <section class="card" aria-labelledby="readTitle">
+            <h3 class="card__title" id="readTitle" data-i18n="readTitle">Medicine details</h3>
+            <p class="card__subtitle" data-i18n="readSubtitle">As read from your photo</p>
+            <dl class="details" id="readFields"></dl>
+            <form id="recheck" class="recheck" novalidate>
+              <label class="field-label" for="fixBatch" data-i18n="fixLabel">Batch number wrong? Correct it</label>
+              <div class="input-group">
+                <input id="fixBatch" class="input input--mono" autocomplete="off" spellcheck="false" maxlength="40">
+                <button type="submit" class="button button--secondary" data-i18n="recheck">Check again</button>
+              </div>
+            </form>
+            <p id="otherProducts" class="inline-note" hidden></p>
+          </section>
+
+          <section class="card" aria-labelledby="recordTitle" id="recordCard" hidden>
+            <div class="card__header">
+              <h3 class="card__title" id="recordTitle" data-i18n="recordTitle">CDSCO record</h3>
+              <span class="badge badge--official" data-i18n="officialBadge">Official</span>
+            </div>
+            <p class="card__subtitle" id="recordSubtitle"></p>
+            <dl class="details" id="recordFields"></dl>
+            <a class="text-link" href="https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug" target="_blank" rel="noopener">
+              <span data-i18n="recordLink">View CDSCO's public list</span>
+              <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 5h5v5"/><path d="M19 5l-8 8"/><path d="M17 14v5H5V7h5"/></svg>
+            </a>
+          </section>
+
+          <section class="card" aria-labelledby="waTitle" id="waCard" hidden>
+            <h3 class="card__title" id="waTitle" data-i18n="waTitle">Message for family</h3>
+            <p class="card__subtitle" data-i18n="waSubtitle">Ready to send on WhatsApp</p>
+            <p class="chat-bubble" id="whatsapp"></p>
+            <div class="button-row">
+              <button id="copyWa" type="button" class="button button--secondary">
+                <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>
+                <span id="copyWaLabel" data-i18n="copy">Copy</span>
+              </button>
+              <a id="openWa" class="button button--whatsapp" target="_blank" rel="noopener">
+                <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 18.8z"/></svg>
+                <span data-i18n="openWa">Send on WhatsApp</span>
+              </a>
+            </div>
+          </section>
+        </div>
+
+        <section class="card" aria-labelledby="sourcesTitle">
+          <h3 class="card__title" id="sourcesTitle" data-i18n="sourcesTitle">Sources</h3>
+          <ol class="sources" id="sources"></ol>
+        </section>
+
+        <section class="card" aria-labelledby="traceTitle">
+          <div class="card__header">
+            <h3 class="card__title" id="traceTitle" data-i18n="traceTitle">How this answer was made</h3>
+            <span class="badge badge--neutral tabular" id="traceTotal"></span>
+          </div>
+          <div class="table-wrap">
+            <table class="table">
+              <thead><tr><th data-i18n="thStep">Step</th><th data-i18n="thEngine">Model or tool</th><th class="num" data-i18n="thTime">Time</th><th class="num" data-i18n="thTokens">Tokens</th></tr></thead>
+              <tbody id="trace"></tbody>
+            </table>
+          </div>
+          <p class="inline-note" data-i18n="traceNote">The verdict is decided by DawaGuard's own check of CDSCO data. The language models only read the photo and explain the result.</p>
+        </section>
+
+        <button type="button" class="button button--ghost button--block" id="newCheck" data-i18n="newCheck">Check another medicine</button>
+      </div>
     </section>
   </main>
 
-  <footer class="foot">
-    <p data-i18n="footData">Data: CDSCO "Not of Standard Quality" and spurious drug alerts, January 2025 onwards, refreshed daily.</p>
-    <p data-i18n="footSafety">DawaGuard is a safety check, not medical advice. Don't stop a medicine without talking to your doctor or pharmacist.</p>
-    <p><a href="https://github.com/Farhan7-tech/dawaguard" data-i18n="footCode">Source code</a></p>
+  <footer class="footer">
+    <div class="footer__inner">
+      <p data-i18n="footData">Data from CDSCO's public "Not of Standard Quality" and spurious drug alerts, January 2025 onwards, refreshed daily.</p>
+      <p><span data-i18n="footBuilt">Built with NVIDIA Nemotron on Nebius Token Factory and Tavily.</span> <a class="text-link" href="https://github.com/Farhan7-tech/dawaguard" data-i18n="footCode">Source code</a></p>
+    </div>
   </footer>
 
   <script src="app.js"></script>

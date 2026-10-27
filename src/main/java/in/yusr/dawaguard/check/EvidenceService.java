@@ -64,7 +64,11 @@ public class EvidenceService {
             return "";
         }
         // Tavily page extracts often open with a "Title: ..." line that repeats the title.
-        String s = content.replaceFirst("^\\s*Title:[^\\n]*\\n", "").replaceAll("\\s+", " ").trim();
+        // Extracts of table-heavy pages also carry runs of "|" cell separators and "[...]" markers.
+        String s = content.replaceFirst("^\\s*Title:[^\\n]*\\n", "")
+                .replace("[...]", " ")
+                .replaceAll("(\\s*\\|\\s*)+", " ")
+                .replaceAll("\\s+", " ").trim();
         return s.length() > 280 ? s.substring(0, 280) + "…" : s;
     }
 
