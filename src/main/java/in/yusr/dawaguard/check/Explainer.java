@@ -26,8 +26,11 @@ public class Explainer {
             - The verdict is already decided by DawaGuard's checks. Never change, soften or contradict it.
             - Use only the facts provided. Do not invent batch numbers, dates, test results, laws or phone numbers.
             - A failed CDSCO test applies to that specific batch, not the whole brand or company. Say so when relevant.
-            - Never tell anyone to stop a medicine or treatment on their own. For a flagged batch, the safe advice is to
-              ask their pharmacist to replace it with a different batch, and to speak to their doctor or pharmacist first.
+            - Never tell anyone to stop a medicine or treatment on their own. Only for a flagged batch (failed test,
+              suspected fake or possible match), the safe advice is to ask their pharmacist to replace it with a
+              different batch, and to speak to their doctor or pharmacist first.
+            - Never call a medicine "safe", "certified" or "approved". If it is not flagged, say it is not on any
+              CDSCO alert in DawaGuard's data.
             - This is a safety check, not medical advice.
             - Write in %s. Keep medicine names, batch numbers and dates exactly as given.
             """;
@@ -44,8 +47,9 @@ public class Explainer {
 
     private static final String WHATSAPP_PROMPT = """
             You write one WhatsApp message (max 320 characters, plain text, no markdown) telling a family member
-            the result of a medicine check. Start with one fitting emoji. Include the medicine name and batch number.
-            End with the single most important next step.
+            the result of a medicine check. It is sent exactly as written: no greeting, no placeholders such as
+            [Name], no sign-off, no emoji. Include the medicine name and batch number.
+            End with the next step given in "message_next_step" (translated if needed), and no other advice.
             """;
 
     private final NebiusClient nebius;
@@ -65,16 +69,46 @@ public class Explainer {
     }
 
     public NebiusClient.ChatResult whatsapp(Facts facts) {
-        NebiusClient.ChatResult chat = nebius.chat(props.nebius().models().fast(),
-                WHATSAPP_PROMPT + RULES.formatted(facts.languageName()), json.writeValueAsString(facts.asPromptInput()),
-                null, 300, false);
-        return new NebiusClient.ChatResult(chat.model(), toWhatsAppText(chat.content()), chat.promptTokens(),
-                chat.completionTokens(), chat.latencyMs());
+        String system = "Write the entire message in " + facts.languageName() + ".\n" + WHATSAPP_PROMPT
+                + RULES.formatted(facts.languageName());
+        // Lightning (no thinking) writes clean English in under a second, but its Hindi drifts into romanized
+        // Hinglish and mangled words. Hindi messages go to Ultra, whose Hindi held up in testing.
+        boolean hindi = "hi".equals(facts.language());
+        String model = hindi ? props.nebius().models().reasoning() : props.nebius().models().fast();
+        NebiusClient.ChatResult chat = nebius.chat(model, system, json.writeValueAsString(facts.asPromptInput()),
+                null, hindi ? 1500 : 300, hindi);
+        String text = emojiFor(facts.assessment().verdict()) + " " + stripLeadingSymbols(toWhatsAppText(chat.content()));
+        return new NebiusClient.ChatResult(chat.model(), text, chat.promptTokens(), chat.completionTokens(),
+                chat.latencyMs());
+    }
+
+    /**
+     * The emoji is decided from the verdict, not by the model: left to choose, it once opened a
+     * "failed quality test" message with a green check mark.
+     */
+    static String emojiFor(Verdict verdict) {
+        return switch (verdict) {
+            case SUSPECTED_FAKE -> "🚫";
+            case FAILED_QUALITY_TEST -> "⚠️";
+            case POSSIBLE_MATCH -> "🔎";
+            case EXPIRED -> "⏰";
+            case NEEDS_BATCH_NUMBER, UNREADABLE -> "📷";
+            case NOT_FLAGGED -> "✅";
+        };
+    }
+
+    /** Drops any emoji or symbols the model put at the start anyway. */
+    static String stripLeadingSymbols(String text) {
+        return text.replaceFirst("^[^\\p{L}\\p{N}]+", "");
     }
 
     /** WhatsApp bolds with *single* asterisks; models tend to write Markdown's **double**. */
     static String toWhatsAppText(String text) {
-        String s = text.replace("**", "*").replaceAll("[ \\t]+\\n", "\n").replaceAll("\\n{3,}", "\n\n").trim();
+        String s = text.replace("**", "*")
+                .replaceAll("(?i)^\\s*(hi|hello|dear)\\b[^\\n]*\\[[^\\]]{1,20}\\][^\\n]*\\n+", "") // "Hello [Name],"
+                .replaceAll("\\[(name|recipient|your name)\\]", "")
+                .replaceAll("(?im)^\\s*end\\.?\\s*$", "")
+                .replaceAll("[ \\t]+\\n", "\n").replaceAll("\\n{3,}", "\n\n").trim();
         return s.length() > 600 ? s.substring(0, 600).trim() + "…" : s;
     }
 
@@ -97,6 +131,7 @@ public class Explainer {
             Map<String, Object> in = new LinkedHashMap<>();
             in.put("verdict", assessment.verdict().name());
             in.put("verdict_meaning", meaning(assessment.verdict()));
+            in.put("message_next_step", messageNextStep(assessment.verdict(), language));
             in.put("medicine_as_read", reading);
             in.put("expiry_parsed", assessment.expiry() == null ? null : assessment.expiry().toString());
             in.put("is_expired", assessment.expired());
@@ -129,6 +164,28 @@ public class Explainer {
             m.put("reported_by", b.getReportedBy());
             m.put("cdsco_alert_month", b.getReportingMonth());
             return m;
+        }
+
+        /** The one action the WhatsApp message ends with. Decided here, because the fast model mixes up conditional advice. */
+        static String messageNextStep(Verdict v, String language) {
+            if ("hi".equals(language)) {
+                return switch (v) {
+                    case SUSPECTED_FAKE, FAILED_QUALITY_TEST -> "अपने फ़ार्मासिस्ट से इसे किसी दूसरे बैच से बदलने को कहें, "
+                            + "और कुछ भी बदलने से पहले डॉक्टर या फ़ार्मासिस्ट से बात करें।";
+                    case POSSIBLE_MATCH -> "कुछ भी करने से पहले स्ट्रिप पर छपा बैच नंबर दोबारा जाँचें।";
+                    case EXPIRED -> "अगली खुराक से पहले फ़ार्मासिस्ट से नई स्ट्रिप लें।";
+                    case NEEDS_BATCH_NUMBER, UNREADABLE -> "बैच नंबर साफ़ दिखाती हुई फ़ोटो दोबारा भेजें।";
+                    case NOT_FLAGGED -> "दवा डॉक्टर के बताए अनुसार लेते रहें, और नई स्ट्रिप भी इसी तरह जाँचें।";
+                };
+            }
+            return switch (v) {
+                case SUSPECTED_FAKE, FAILED_QUALITY_TEST -> "Ask your pharmacist to replace it with a different batch, "
+                        + "and talk to your doctor or pharmacist before changing anything.";
+                case POSSIBLE_MATCH -> "Check the batch number printed on the strip again before doing anything else.";
+                case EXPIRED -> "Ask your pharmacist for a fresh strip before the next dose.";
+                case NEEDS_BATCH_NUMBER, UNREADABLE -> "Send a clearer photo that shows the batch number.";
+                case NOT_FLAGGED -> "Keep taking it as prescribed, and check new strips the same way.";
+            };
         }
 
         private static String meaning(Verdict v) {

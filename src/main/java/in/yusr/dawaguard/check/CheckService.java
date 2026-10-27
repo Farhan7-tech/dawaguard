@@ -92,7 +92,8 @@ public class CheckService {
 
         Explainer.Facts facts = new Explainer.Facts(language, reading, assessment, found);
         events.accept(step("explain", "running", props.nebius().models().reasoning(), null));
-        events.accept(step("message", "running", props.nebius().models().fast(), null));
+        String messageModel = "hi".equals(language) ? props.nebius().models().reasoning() : props.nebius().models().fast();
+        events.accept(step("message", "running", messageModel, null));
         CompletableFuture<Explainer.Explained> explained = CompletableFuture.supplyAsync(() -> explainer.explain(facts), pool);
         CompletableFuture<NebiusClient.ChatResult> whatsapp = CompletableFuture.supplyAsync(() -> explainer.whatsapp(facts), pool);
 
@@ -114,7 +115,7 @@ public class CheckService {
             events.accept(step("message", "done", w.model(), trace.getLast()));
         } catch (RuntimeException e) {
             log.warn("WhatsApp message failed: {}", e.getMessage());
-            events.accept(step("message", "failed", props.nebius().models().fast(), null));
+            events.accept(step("message", "failed", messageModel, null));
         }
 
         return new CheckResult(language, reading, assessment.verdict(), assessment.confirmedMatches(),

@@ -220,11 +220,15 @@
     }
   }
 
-  function markStep(step, state, text) {
+  function markStep(step, state, text, engine) {
     const li = document.querySelector(`.stepper__step[data-step="${step}"]`);
     if (!li) return;
     li.dataset.status = state;
     li.querySelector(".stepper__time").textContent = text ?? "";
+    // The server says which model actually runs a step (e.g. Hindi messages are written by Ultra).
+    if (engine && ENGINE_NAMES[engine]) {
+      li.querySelector(".stepper__engine").textContent = ENGINE_NAMES[engine].replace(/^NVIDIA /, "");
+    }
   }
 
   function onEvent(e) {
@@ -232,7 +236,7 @@
       const label = e.status === "done" ? (e.ms != null ? `${(e.ms / 1000).toFixed(1)} s` : "")
         : e.status === "running" ? t("running")
         : e.status === "skipped" ? t("skipped") : t("failed");
-      markStep(e.step, e.status, label);
+      markStep(e.step, e.status, label, e.engine);
     } else if (e.type === "result") {
       $("progressBadge").textContent = t("completed");
       renderResult(e.result, true);

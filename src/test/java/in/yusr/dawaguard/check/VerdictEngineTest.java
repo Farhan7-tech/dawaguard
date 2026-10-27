@@ -109,6 +109,20 @@ class VerdictEngineTest {
     }
 
     @Test
+    void whatsappEmojiComesFromTheVerdictNotTheModel() {
+        assertThat(Explainer.emojiFor(Verdict.FAILED_QUALITY_TEST)).isEqualTo("⚠️");
+        assertThat(Explainer.emojiFor(Verdict.NOT_FLAGGED)).isEqualTo("✅");
+        assertThat(Explainer.stripLeadingSymbols("✅ Pansid-40 failed")).isEqualTo("Pansid-40 failed");
+        assertThat(Explainer.stripLeadingSymbols("🚫 पैंसिड-40")).isEqualTo("पैंसिड-40");
+    }
+
+    @Test
+    void whatsappTextDropsPlaceholdersAndSignOffs() {
+        String raw = "Hello [Name],\n\nBatch TG25-1814A of **Pansid-40** failed.\n\nEnd.";
+        assertThat(Explainer.toWhatsAppText(raw)).isEqualTo("Batch TG25-1814A of *Pansid-40* failed.");
+    }
+
+    @Test
     void extractsJsonFromChattyModelOutput() {
         String text = "Here you go:\n```json\n{\"batch_no\": \"A{1}\", \"nested\": {\"x\": 1}}\n```";
         assertThat(JsonText.firstObject(text)).isEqualTo("{\"batch_no\": \"A{1}\", \"nested\": {\"x\": 1}}");
