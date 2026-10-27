@@ -4,6 +4,7 @@ import in.yusr.dawaguard.config.DawaGuardProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.scheduling.annotation.Async;
@@ -16,7 +17,10 @@ import java.io.InputStream;
 import java.time.Instant;
 import java.time.YearMonth;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Keeps the local copy of CDSCO's flagged batches current.
@@ -33,14 +37,16 @@ public class CdscoSyncService {
     private final FlaggedBatchRepository repository;
     private final DawaGuardProperties props;
     private final JsonMapper json;
+    private final ApplicationEventPublisher events;
     private volatile Instant lastSync;
 
     public CdscoSyncService(CdscoClient client, FlaggedBatchRepository repository,
-                            DawaGuardProperties props, JsonMapper json) {
+                            DawaGuardProperties props, JsonMapper json, ApplicationEventPublisher events) {
         this.client = client;
         this.repository = repository;
         this.props = props;
         this.json = json;
+        this.events = events;
     }
 
     @Async
@@ -65,19 +71,27 @@ public class CdscoSyncService {
 
     public synchronized int syncRange(YearMonth from, YearMonth to) {
         int saved = 0;
+        List<FlaggedBatch> added = new ArrayList<>();
         for (YearMonth m = from; !m.isAfter(to); m = m.plusMonths(1)) {
             for (ListType type : ListType.values()) {
                 try {
-                    List<CdscoRow> rows = client.fetchMonth(m, type);
-                    repository.saveAll(rows.stream().map(r -> FlaggedBatch.from(r, type)).toList());
-                    saved += rows.size();
-                    log.info("CDSCO {} {}: {} rows", type, m, rows.size());
+                    List<FlaggedBatch> batches = client.fetchMonth(m, type).stream()
+                            .map(r -> FlaggedBatch.from(r, type)).toList();
+                    Set<String> known = repository.findAllById(batches.stream().map(FlaggedBatch::getId).toList())
+                            .stream().map(FlaggedBatch::getId).collect(Collectors.toSet());
+                    repository.saveAll(batches);
+                    batches.stream().filter(b -> !known.contains(b.getId())).forEach(added::add);
+                    saved += batches.size();
+                    log.info("CDSCO {} {}: {} rows, {} new", type, m, batches.size(), batches.size() - known.size());
                 } catch (RuntimeException e) {
                     log.warn("CDSCO {} {} failed: {}", type, m, e.getMessage());
                 }
             }
         }
         lastSync = Instant.now();
+        if (!added.isEmpty()) {
+            events.publishEvent(new NewFlaggedBatches(added));
+        }
         return saved;
     }
 

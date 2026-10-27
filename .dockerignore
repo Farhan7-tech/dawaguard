@@ -1,0 +1,9 @@
+.env
+**/.env
+.git
+.idea
+data
+target
+tools
+*.mv.db
+*.trace.db

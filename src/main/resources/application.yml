@@ -26,6 +26,8 @@ spring:
       request-timeout: 120s
 
 server:
+  # Hosting platforms pass the port to listen on in PORT.
+  port: ${PORT:8080}
   # Trust X-Forwarded-For from the hosting platform's proxy, so rate limits apply per real client.
   forward-headers-strategy: native
 
@@ -53,6 +55,17 @@ dawaguard:
   diagnostics:
     # Smoke-test endpoints that spend API credits. Keep false anywhere public.
     enabled: ${DIAGNOSTICS_ENABLED:false}
+  whatsapp:
+    enabled: ${WHATSAPP_ENABLED:false}
+    graph-url: ${WHATSAPP_GRAPH_URL:https://graph.facebook.com/v23.0}
+    phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID:}
+    access-token: ${WHATSAPP_ACCESS_TOKEN:}
+    verify-token: ${WHATSAPP_VERIFY_TOKEN:}
+    app-secret: ${WHATSAPP_APP_SECRET:}
+    alert-template: ${WHATSAPP_ALERT_TEMPLATE:dawaguard_batch_alert}
+    template-language: ${WHATSAPP_TEMPLATE_LANGUAGE:en}
+  demo:
+    token: ${DEMO_TOKEN:}
 
 management:
   endpoints:

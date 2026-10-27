@@ -1,0 +1,31 @@
+# DawaGuard behind Caddy, which gets and renews the HTTPS certificate automatically.
+# On the server: put the production .env next to this file, set DAWAGUARD_DOMAIN in it, then
+#   docker compose up -d --build
+services:
+  app:
+    build: ..
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - dawaguard-data:/app/data
+    expose:
+      - "8080"
+  caddy:
+    image: caddy:2.10
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DAWAGUARD_DOMAIN: ${DAWAGUARD_DOMAIN:?set DAWAGUARD_DOMAIN in .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+
+volumes:
+  dawaguard-data:
+  caddy-data:
+  caddy-config:

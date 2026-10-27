@@ -15,5 +15,10 @@ public enum Verdict {
     /** The photo doesn't show a readable medicine pack. */
     UNREADABLE,
     /** Not in any CDSCO alert in the loaded data, and not expired. */
-    NOT_FLAGGED
+    NOT_FLAGGED;
+
+    /** On a CDSCO alert (or nearly so): the family should hear about it. */
+    public boolean flagged() {
+        return this == SUSPECTED_FAKE || this == FAILED_QUALITY_TEST || this == POSSIBLE_MATCH;
+    }
 }

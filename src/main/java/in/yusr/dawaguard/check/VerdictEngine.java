@@ -40,11 +40,31 @@ public class VerdictEngine {
             return new Assessment(v, List.of(), List.of(), List.of(), expiry.orElse(null), expired);
         }
 
-        List<FlaggedBatch> exact = batches.findByBatchKey(batchKey);
+        return decide(reading, batches.findByBatchKey(batchKey),
+                batches.findByBatchKeyLoose(BatchKeys.loose(reading.batchNo())), expiry, expired);
+    }
+
+    /**
+     * Judges a medicine against a given set of flagged batches only, such as the rows in a list CDSCO just
+     * published. Used to re-check saved medicines without re-reading the whole database.
+     */
+    public Assessment assessAgainst(StripReading reading, List<FlaggedBatch> candidates) {
+        String batchKey = BatchKeys.strict(reading.batchNo());
+        String looseKey = BatchKeys.loose(reading.batchNo());
+        if (batchKey.isEmpty()) {
+            return new Assessment(Verdict.NEEDS_BATCH_NUMBER, List.of(), List.of(), List.of(), null, false);
+        }
+        List<FlaggedBatch> exact = candidates.stream().filter(b -> batchKey.equals(b.getBatchKey())).toList();
+        List<FlaggedBatch> loose = candidates.stream().filter(b -> looseKey.equals(b.getBatchKeyLoose())).toList();
+        return decide(reading, exact, loose, Optional.empty(), false);
+    }
+
+    private static Assessment decide(StripReading reading, List<FlaggedBatch> exact, List<FlaggedBatch> loose,
+                                     Optional<YearMonth> expiry, boolean expired) {
         List<FlaggedBatch> confirmed = exact.stream().filter(b -> ProductMatch.sameProduct(reading, b)).toList();
         List<FlaggedBatch> otherProducts = exact.stream().filter(b -> !confirmed.contains(b)).toList();
         List<FlaggedBatch> possible = confirmed.isEmpty()
-                ? batches.findByBatchKeyLoose(BatchKeys.loose(reading.batchNo())).stream()
+                ? loose.stream()
                         .filter(b -> !exact.contains(b))
                         .filter(b -> ProductMatch.sameProduct(reading, b))
                         .toList()

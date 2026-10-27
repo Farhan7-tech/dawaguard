@@ -1,0 +1,7 @@
+{$DAWAGUARD_DOMAIN} {
+	encode gzip
+	reverse_proxy app:8080 {
+		# Check progress is streamed line by line; pass each line on immediately.
+		flush_interval -1
+	}
+}

@@ -17,12 +17,23 @@ The lists are public, but nobody checks them before taking a tablet.
 | 1. Read | Extract brand, ingredients, batch number, manufacturer and expiry from a strip photo | NVIDIA Nemotron 3.5 Super VL on Nebius Token Factory |
 | 2. Match | Look up the batch in CDSCO's flagged-batch data, tolerant of OCR mistakes | Local database synced from CDSCO |
 | 3. Verify | Search for alerts and recalls newer than the monthly data | Tavily |
-| 4. Explain | Plain-language verdict in English or Hindi, with the official source and safe next steps | NVIDIA Nemotron 3 Ultra |
-| 5. Watch | Remember the family's medicines and re-check them whenever CDSCO publishes a new list | NVIDIA Nemotron 3.5 Lightning |
+| 4. Explain | Plain-language verdict in English or Hindi, with the official source and safe next steps, plus a short message to forward to family | NVIDIA Nemotron 3 Ultra (explanation, Hindi messages), Nemotron 3.5 Lightning (English messages) |
+| 5. Watch | Keep each family's checked medicines in a cabinet and re-check them whenever CDSCO publishes a new list | Code, alerts sent over WhatsApp |
 
 **The verdict is decided by code, not by a language model.** DawaGuard matches the batch number (tolerating common misreads such as O/0 and S/5), checks that the product on the strip is the product CDSCO flagged (batch codes repeat across companies), and parses the expiry date. Nemotron only reads the photo and explains the decided result, and its prompts forbid changing the verdict or adding facts. Every answer cites the official CDSCO record first.
 
 The web page streams each step as it happens and shows which model did what, with timings and token counts. Three synthetic sample strips (failed batch, clear batch, expired) let anyone try it without a real strip.
+
+## On WhatsApp
+
+Families already live on WhatsApp, so DawaGuard works there too (Meta WhatsApp Cloud API):
+
+- Send a photo of a strip, or type a batch number such as `TG25-1814A Pansid-40`. The reply is the same check as the web page. A photo caption ("Papa's BP tablet") becomes the medicine's label.
+- Every checked medicine with a batch number is saved to the family's **medicine cabinet**. Reply `cabinet` to see it with a fresh verdict for each, `remove 2` to take one out, `हिंदी` or `English` to switch language, and `stop` to delete everything saved.
+- When the daily CDSCO sync finds new flagged batches, DawaGuard re-checks every cabinet against just those rows and messages the family about any match, once per finding. Alerts are worded by code, not a model, because they must be exact. More than 24 hours after the family last wrote, WhatsApp only allows approved templates, so the alert goes as the `dawaguard_batch_alert` template and the full details follow when they reply.
+- Webhooks are accepted only with a valid Meta signature (`X-Hub-Signature-256`), and repeated deliveries are answered once.
+
+CDSCO publishes alert lists about once a month. To show the alert path in a demo, `POST /api/demo/cdsco-alert` with header `X-Demo-Token` (set `DEMO_TOKEN`) and `{"batchNo": "..."}` simulates a new list containing a saved batch. The alert says it is simulated, and the simulated row is never stored.
 
 ## Run locally
 
@@ -44,6 +55,18 @@ With `DIAGNOSTICS_ENABLED=true` in `.env` (local only, these spend API credits):
 
 - `http://localhost:8080/api/diagnostics/models`: one test call to each Nemotron model
 - `http://localhost:8080/api/diagnostics/search`: one Tavily search
+
+## Deploy
+
+`deploy/` runs DawaGuard behind Caddy, which obtains the HTTPS certificate WhatsApp webhooks require. On a Linux server with Docker:
+
+```bash
+git clone https://github.com/Farhan7-tech/dawaguard && cd dawaguard/deploy
+cp ../.env.example .env   # add keys, a strong DB_PASSWORD, and DAWAGUARD_DOMAIN=your.domain
+docker compose up -d --build
+```
+
+Then set the Meta app's webhook to `https://your.domain/webhook/whatsapp` with your `WHATSAPP_VERIFY_TOKEN`, and subscribe to `messages`. The database (CDSCO copy and cabinets) lives in the `dawaguard-data` volume.
 
 ## Data source
 

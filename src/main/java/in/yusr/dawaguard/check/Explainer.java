@@ -86,7 +86,7 @@ public class Explainer {
      * The emoji is decided from the verdict, not by the model: left to choose, it once opened a
      * "failed quality test" message with a green check mark.
      */
-    static String emojiFor(Verdict verdict) {
+    public static String emojiFor(Verdict verdict) {
         return switch (verdict) {
             case SUSPECTED_FAKE -> "🚫";
             case FAILED_QUALITY_TEST -> "⚠️";
@@ -167,7 +167,7 @@ public class Explainer {
         }
 
         /** The one action the WhatsApp message ends with. Decided here, because the fast model mixes up conditional advice. */
-        static String messageNextStep(Verdict v, String language) {
+        public static String messageNextStep(Verdict v, String language) {
             if ("hi".equals(language)) {
                 return switch (v) {
                     case SUSPECTED_FAKE, FAILED_QUALITY_TEST -> "अपने फ़ार्मासिस्ट से इसे किसी दूसरे बैच से बदलने को कहें, "

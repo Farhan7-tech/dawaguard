@@ -111,6 +111,8 @@ public class FlaggedBatch {
     public String getProductName() { return productName; }
     public String getBrandName() { return brandName; }
     public String getBatchNo() { return batchNo; }
+    public String getBatchKey() { return batchKey; }
+    public String getBatchKeyLoose() { return batchKeyLoose; }
     public String getMfgDate() { return mfgDate; }
     public String getExpiryDate() { return expiryDate; }
     public String getManufacturer() { return manufacturer; }
