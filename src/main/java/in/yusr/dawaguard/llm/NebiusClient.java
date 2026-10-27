@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -33,6 +34,15 @@ public class NebiusClient {
 
     /** imageDataUrl is optional, e.g. "data:image/jpeg;base64,...". Only vision models accept it. */
     public ChatResult chat(String model, String system, String user, String imageDataUrl, int maxTokens) {
+        return chat(model, system, user, imageDataUrl, maxTokens, true);
+    }
+
+    /**
+     * thinking=false turns off Nemotron's reasoning phase. Use it for short, simple outputs: without it,
+     * Lightning writes its thinking into the reply and spends hundreds of tokens before answering.
+     */
+    public ChatResult chat(String model, String system, String user, String imageDataUrl, int maxTokens,
+                           boolean thinking) {
         Object userContent = user;
         if (imageDataUrl != null) {
             userContent = List.of(
@@ -45,11 +55,19 @@ public class NebiusClient {
         }
         messages.add(Map.of("role", "user", "content", userContent));
 
+        Map<String, Object> body = new HashMap<>();
+        body.put("model", model);
+        body.put("messages", messages);
+        body.put("max_tokens", maxTokens);
+        if (!thinking) {
+            body.put("chat_template_kwargs", Map.of("enable_thinking", false));
+        }
+
         long started = System.currentTimeMillis();
         ChatResponse response = http.post()
                 .uri("/chat/completions")
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(Map.of("model", model, "messages", messages, "max_tokens", maxTokens))
+                .body(body)
                 .retrieve()
                 .body(ChatResponse.class);
         long latencyMs = System.currentTimeMillis() - started;

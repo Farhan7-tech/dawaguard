@@ -16,6 +16,18 @@ spring:
     hibernate:
       ddl-auto: update
     open-in-view: false
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 11MB
+  mvc:
+    async:
+      # A check takes 10-20 s (vision + reasoning models); leave headroom.
+      request-timeout: 120s
+
+server:
+  # Trust X-Forwarded-For from the hosting platform's proxy, so rate limits apply per real client.
+  forward-headers-strategy: native
 
 dawaguard:
   nebius:
@@ -35,6 +47,9 @@ dawaguard:
     base-url: https://cdscoonline.gov.in/CDSCO
     sync-from: 2025-01
     sync-on-startup: true
+  limits:
+    checks-per-client-per-hour: ${CHECKS_PER_CLIENT_PER_HOUR:15}
+    checks-per-day: ${CHECKS_PER_DAY:300}
   diagnostics:
     # Smoke-test endpoints that spend API credits. Keep false anywhere public.
     enabled: ${DIAGNOSTICS_ENABLED:false}

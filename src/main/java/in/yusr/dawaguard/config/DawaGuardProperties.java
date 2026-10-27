@@ -3,7 +3,11 @@ package in.yusr.dawaguard.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "dawaguard")
-public record DawaGuardProperties(Nebius nebius, Tavily tavily, Cdsco cdsco) {
+public record DawaGuardProperties(Nebius nebius, Tavily tavily, Cdsco cdsco, Limits limits) {
+
+    /** Caps on paid checks (each one calls Nebius and Tavily). */
+    public record Limits(int checksPerClientPerHour, int checksPerDay) {
+    }
 
     public record Nebius(String baseUrl, String apiKey, Models models) {
     }
