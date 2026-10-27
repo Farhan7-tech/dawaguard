@@ -66,7 +66,7 @@ cp ../.env.example .env   # add keys, a strong DB_PASSWORD, and DAWAGUARD_DOMAIN
 docker compose up -d --build
 ```
 
-Then set the Meta app's webhook to `https://your.domain/webhook/whatsapp` with your `WHATSAPP_VERIFY_TOKEN`, and subscribe to `messages`. The database (CDSCO copy and cabinets) lives in the `dawaguard-data` volume.
+Then set the Meta app's webhook to `https://your.domain/webhook/whatsapp` with your `WHATSAPP_VERIFY_TOKEN`, and subscribe to `messages`. The WhatsApp Business Account must also have the app subscribed (`POST /<WABA_ID>/subscribed_apps`), or Meta sends incoming messages nowhere. With a Meta Sandbox test account, only the developer's own (long-lived) user token can send from the sandbox account; a system user token gets error #10. The database (CDSCO copy and cabinets) lives in the `dawaguard-data` volume.
 
 ## Data source
 
