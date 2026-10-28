@@ -25,7 +25,9 @@
 - **A message ready to forward** to the family WhatsApp group.
 - **A watchful cabinet.** Every medicine you check is saved, and DawaGuard messages you if a future CDSCO list flags it.
 
-![A live check: each Nemotron step with its time, then the verdict citing the official CDSCO record](docs/check-result.jpg)
+<p align="center">
+  <img src="docs/overview.jpg" alt="DawaGuard at a glance: a WhatsApp photo of a Pansid-40 strip gets the reply that batch TG25-1814A failed a CDSCO quality test, after Nemotron 3.5 Super VL reads the strip, code matches CDSCO alerts and Nemotron 3 Ultra explains, in 9.6 seconds." width="100%">
+</p>
 
 ## Why it matters
 
@@ -42,7 +44,9 @@ Between January 2025 and September 2026, India's drug regulator reported **3,788
 | 5 | **Message** the family in a forwardable WhatsApp text | NVIDIA **Nemotron 3.5 Lightning** (Hindi: Ultra) |
 | 6 | **Watch** saved medicines and alert on new CDSCO lists | Code and the WhatsApp Cloud API |
 
-Steps 2–3 and 4–5 run in parallel, and the web page streams each step live with its model, time and token count.
+Steps 2–3 and 4–5 run in parallel, and the web page streams each step live with its model, time and token count:
+
+![A live check on the web demo: each Nemotron step with its time, then the verdict citing the official CDSCO record](docs/check-result.jpg)
 
 > [!IMPORTANT]
 > **The verdict is decided by code, never by a language model.** Code matches the batch (allowing for O/0 and S/5 misreads), confirms the product matches too (batch codes repeat across companies), and checks expiry. Nemotron only reads the photo and explains the decided result. Its prompts forbid changing the verdict, adding facts, calling a medicine "safe", or telling anyone to stop a treatment. Even the emoji in each WhatsApp message is picked by code.
