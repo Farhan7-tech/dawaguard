@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 280" width="1200" height="280" role="img" aria-labelledby="t d">
+  <title id="t">DawaGuard</title>
+  <desc id="d">DawaGuard logo next to a medicine strip being scanned for its batch number.</desc>
+  <style>
+    .sans { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .ring { transform-box: fill-box; transform-origin: center; animation: ring 2.4s ease-out infinite; }
+    .scan { animation: scan 3.2s ease-in-out infinite; }
+    .tick { opacity: 0; animation: tick 3.2s ease-in-out infinite; }
+    @keyframes ring { 0% { transform: scale(1); opacity: .55; } 70%, 100% { transform: scale(2.6); opacity: 0; } }
+    @keyframes scan { 0% { transform: translateY(0); opacity: 0; } 10% { opacity: 1; } 55% { transform: translateY(118px); opacity: 1; } 65%, 100% { transform: translateY(118px); opacity: 0; } }
+    @keyframes tick { 0%, 55% { opacity: 0; } 65%, 90% { opacity: 1; } 100% { opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { .ring, .scan { animation: none; } .tick { animation: none; opacity: 1; } }
+  </style>
+
+  <rect x="1" y="1" width="1198" height="278" rx="20" fill="#F4EEE2" stroke="#D8D0C0" stroke-width="2"/>
+
+  <!-- Logo -->
+  <g transform="translate(64 84)">
+    <rect width="88" height="88" rx="20" fill="#0A0A0A"/>
+    <rect x="37" y="20" width="14" height="48" rx="3" fill="#FFFFFF"/>
+    <rect x="20" y="37" width="48" height="14" rx="3" fill="#FFFFFF"/>
+    <circle class="ring" cx="70" cy="18" r="7" fill="#D85A30"/>
+    <circle cx="70" cy="18" r="7" fill="#D85A30"/>
+  </g>
+
+  <text x="176" y="132" class="sans" font-size="58" font-weight="700" fill="#0A0A0A" letter-spacing="-1.5">DawaGuard</text>
+  <text x="178" y="172" class="sans" font-size="22" fill="#5F5E5A">Checks a medicine batch against India's official</text>
+  <text x="178" y="202" class="sans" font-size="22" fill="#5F5E5A">lists of failed and fake drugs, in about 10 seconds.</text>
+
+  <!-- Medicine strip being scanned -->
+  <g transform="translate(806 62)">
+    <rect width="330" height="156" rx="14" fill="#FDFBF7" stroke="#D8D0C0" stroke-width="2"/>
+    <ellipse cx="52" cy="46" rx="26" ry="20" fill="#FFFFFF" stroke="#D8D0C0" stroke-width="2"/>
+    <ellipse cx="52" cy="108" rx="26" ry="20" fill="#FFFFFF" stroke="#D8D0C0" stroke-width="2"/>
+    <ellipse cx="118" cy="46" rx="26" ry="20" fill="#FFFFFF" stroke="#D8D0C0" stroke-width="2"/>
+    <ellipse cx="118" cy="108" rx="26" ry="20" fill="#FFFFFF" stroke="#D8D0C0" stroke-width="2"/>
+    <text x="166" y="50" class="mono" font-size="15" fill="#5F5E5A">B.No.</text>
+    <text x="166" y="72" class="mono" font-size="17" font-weight="700" fill="#0A0A0A">TG25-1814A</text>
+    <text x="166" y="102" class="mono" font-size="15" fill="#5F5E5A">Exp.</text>
+    <text x="166" y="124" class="mono" font-size="17" font-weight="700" fill="#0A0A0A">SEP.2027</text>
+    <g class="scan">
+      <rect x="8" y="16" width="314" height="3" rx="1.5" fill="#D85A30"/>
+      <rect x="8" y="19" width="314" height="16" fill="#D85A30" opacity=".10"/>
+    </g>
+    <!-- TG25-1814A is a real batch on CDSCO's January 2026 alert, so the scan ends in a warning, not a tick -->
+    <g class="tick" transform="translate(296 -14)">
+      <circle cx="16" cy="16" r="16" fill="#D85A30"/>
+      <rect x="14" y="7" width="4" height="12" rx="2" fill="#FFFFFF"/>
+      <circle cx="16" cy="24" r="2.3" fill="#FFFFFF"/>
+    </g>
+  </g>
+</svg>

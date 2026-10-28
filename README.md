@@ -1,38 +1,56 @@
-# DawaGuard
+<p align="center">
+  <img src="docs/banner.svg" alt="DawaGuard: checks a medicine batch against India's official lists of failed and fake drugs, in about 10 seconds." width="100%">
+</p>
 
-**A medicine guardian for Indian families, on WhatsApp and the web.** Send a photo of a medicine strip. DawaGuard reads the batch number and checks it against India's official lists of drug batches that failed government quality tests or are suspected fakes, explains the result in English or Hindi, and keeps watching the family's medicines as new lists come out.
+<p align="center">
+  <a href="https://dawaguard-3-7-165-100.sslip.io"><b>Try the live demo</b></a> &nbsp;·&nbsp;
+  <a href="#how-it-works">How it works</a> &nbsp;·&nbsp;
+  <a href="#nvidia-nemotron-on-nebius-token-factory">Nemotron on Nebius</a> &nbsp;·&nbsp;
+  <a href="#run-it-yourself">Run it yourself</a>
+</p>
 
-**Try it:** [dawaguard-3-7-165-100.sslip.io](https://dawaguard-3-7-165-100.sslip.io) (tap a sample strip, no sign-up)
+<p align="center">
+  <img alt="NVIDIA Nemotron" src="https://img.shields.io/badge/NVIDIA-Nemotron-76B900?logo=nvidia&logoColor=white">
+  <img alt="Nebius Token Factory" src="https://img.shields.io/badge/Nebius-Token%20Factory-0A0A0A">
+  <img alt="Tavily" src="https://img.shields.io/badge/Search-Tavily-D85A30">
+  <img alt="WhatsApp Cloud API" src="https://img.shields.io/badge/WhatsApp-Cloud%20API-25D366?logo=whatsapp&logoColor=white">
+  <img alt="Java 21, Spring Boot 4" src="https://img.shields.io/badge/Java%2021-Spring%20Boot%204-6DB33F?logo=springboot&logoColor=white">
+  <img alt="MIT License" src="https://img.shields.io/badge/License-MIT-5F5E5A">
+</p>
 
-Built for the [Nebius x NVIDIA Global AI Hackathon](https://nebiusglobalaihackathon.devpost.com/) with three NVIDIA Nemotron models on Nebius Token Factory.
+**India publishes every medicine batch that fails a government quality test, but nobody checks before taking a tablet.** DawaGuard makes that check take one photo. Send a picture of a medicine strip on WhatsApp or the web, and in about 10 seconds you get:
 
-![A check of a sample strip: every step with its model and time, then the verdict with the official CDSCO record cited](docs/check-result.jpg)
+- **A verdict** from India's official CDSCO alerts: failed a quality test, suspected fake, expired, or not on any alert.
+- **What to do next**, in English or Hindi, with the official record cited first.
+- **A message ready to forward** to the family WhatsApp group.
+- **A watchful cabinet.** Every medicine you check is saved, and DawaGuard messages you if a future CDSCO list flags it.
 
-## The problem
+![A live check: each Nemotron step with its time, then the verdict citing the official CDSCO record](docs/check-result.jpg)
 
-Every month India's drug regulator, CDSCO, publishes the medicine batches that failed lab tests ("Not of Standard Quality") or were found spurious. Between January 2025 and September 2026 that was **3,788 failed batches and 49 suspected fakes**, including **355 batches of paracetamol**. More than half of the failed batches don't expire until 2027 or later, so they may still be on shelves and in family medicine boxes.
+## Why it matters
 
-The lists are public, but they are long monthly tables on a government website. Nobody checks them before taking a tablet.
+Between January 2025 and September 2026, India's drug regulator reported **3,788 batches that failed lab tests and 49 suspected fakes**, including **355 batches of paracetamol**. More than half of the failed batches don't expire until 2027 or later, so they may still be on shelves and in family medicine boxes. The lists are public, but they are long monthly tables on a government website.
 
 ## How it works
 
-| Step | What happens | Powered by |
+| | Step | Powered by |
 |---|---|---|
-| 1. Read | Brand, ingredients, strength, batch number, manufacturer and expiry from a strip photo | **Nemotron 3.5 Super VL** on Nebius Token Factory |
-| 2. Match | Look up the batch in CDSCO's flagged batches, tolerant of misreads, and check the product matches | Local copy of CDSCO data, synced daily |
-| 3. Verify | Search for newer alerts and recalls than the monthly data | Tavily, limited to official and pharma-news sites |
-| 4. Explain | Plain-language verdict with the official source cited first and safe next steps | **Nemotron 3 Ultra** |
-| 5. Message | A short message to forward to family on WhatsApp | **Nemotron 3.5 Lightning** (English), Nemotron 3 Ultra (Hindi) |
-| 6. Watch | Keep the family's medicines in a cabinet and re-check them whenever CDSCO publishes a new list | Code, alerts sent over WhatsApp |
+| 1 | **Read** brand, ingredients, batch number and expiry from the photo | NVIDIA **Nemotron 3.5 Super VL** |
+| 2 | **Match** the batch against every CDSCO flagged batch, tolerant of misreads | Code, on a daily-synced copy of CDSCO data |
+| 3 | **Verify** with a search for alerts newer than the monthly lists | **Tavily**, limited to official and pharma-news sites |
+| 4 | **Explain** the verdict with citations and safe next steps | NVIDIA **Nemotron 3 Ultra** |
+| 5 | **Message** the family in a forwardable WhatsApp text | NVIDIA **Nemotron 3.5 Lightning** (Hindi: Ultra) |
+| 6 | **Watch** saved medicines and alert on new CDSCO lists | Code and the WhatsApp Cloud API |
 
-**The verdict is decided by code, not by a language model.** DawaGuard matches the batch number (tolerating misreads such as O/0 and S/5), checks that the product on the strip is the product CDSCO flagged (batch codes repeat across companies), and parses the expiry date. Nemotron reads the photo and explains the decided result; its prompts forbid changing the verdict, adding facts, calling a medicine "safe", or telling anyone to stop a treatment. The emoji and closing advice in each WhatsApp message are also chosen by code, after the fast model once put a green check mark on a failed batch.
+Steps 2–3 and 4–5 run in parallel, and the web page streams each step live with its model, time and token count.
 
-A photo check takes about 10 seconds on the live server: reading 3–4 s, matching and the news search in parallel (about 2.5 s), and the explanation and message in parallel (about 3 s). The page streams each step as it happens and shows which model did what, with timings and token counts.
+> [!IMPORTANT]
+> **The verdict is decided by code, never by a language model.** Code matches the batch (allowing for O/0 and S/5 misreads), confirms the product matches too (batch codes repeat across companies), and checks expiry. Nemotron only reads the photo and explains the decided result. Its prompts forbid changing the verdict, adding facts, calling a medicine "safe", or telling anyone to stop a treatment. Even the emoji in each WhatsApp message is picked by code.
 
 ```mermaid
 flowchart LR
     P[Strip photo<br/>web or WhatsApp] --> R[Read<br/>Nemotron 3.5 Super VL]
-    R --> M[Match<br/>CDSCO data, code]
+    R --> M[Match<br/>CDSCO data]
     R --> V[Verify<br/>Tavily]
     M --> D{Verdict<br/>decided by code}
     V --> E
@@ -40,87 +58,92 @@ flowchart LR
     D --> W[WhatsApp message<br/>Nemotron 3.5 Lightning]
     D --> C[(Family cabinet)]
     S[Daily CDSCO sync] -->|new flagged batches| C
-    C -->|match| A[WhatsApp alert]
+    C -->|match found| A[WhatsApp alert]
 ```
 
 ## NVIDIA Nemotron on Nebius Token Factory
 
-Each job uses the smallest Nemotron model that does it well, all through Token Factory's OpenAI-compatible API (`NebiusClient`):
+Each step uses the smallest Nemotron model that does it well, all through one Token Factory API key and endpoint:
 
-- **Nemotron 3.5 Super VL** reads the strip and returns structured JSON. Batch numbers are small, printed on foil, and easy to confuse (0/O, 5/S); the vision model reads them reliably, and code tolerates the remaining misreads.
-- **Nemotron 3 Ultra** writes the explanation, where reasoning matters: it must cite only sources that support each claim, keep a batch failure separate from the brand, and give safe next steps. It also writes Hindi messages, because its Devanagari held up where the fast model drifted into Hinglish.
-- **Nemotron 3.5 Lightning** writes the short English WhatsApp message in under a second, with thinking turned off (`chat_template_kwargs: {enable_thinking: false}`), so the message arrives with the explanation rather than after it.
+| Model | Job | Why this size |
+|---|---|---|
+| **Nemotron 3.5 Super VL** | Reads the strip into structured JSON | Batch numbers are tiny print on shiny foil; a capable vision model reads them reliably in 3–4 s |
+| **Nemotron 3 Ultra** | Explanation with citations; Hindi messages | Needs real reasoning: cite only supporting sources, keep a batch failure separate from the brand, give safe steps. Its Hindi held up where smaller models drifted into Hinglish |
+| **Nemotron 3.5 Lightning** | Short English WhatsApp message | Under a second with thinking off (`enable_thinking: false`), so it finishes alongside the explanation |
 
-Token Factory made this practical: one API key and one OpenAI-compatible endpoint for three model sizes, so choosing the right model per step was a config line (`MODEL_VISION`, `MODEL_REASONING`, `MODEL_FAST`), not a new integration.
+Because Token Factory is OpenAI-compatible, switching a step to a different model is one environment variable (`MODEL_VISION`, `MODEL_REASONING`, `MODEL_FAST`), not a new integration. A full photo check takes about 10 seconds on the live server.
 
 ## On WhatsApp
 
-Families already live on WhatsApp, so DawaGuard works there too (Meta WhatsApp Cloud API):
+- **Check:** send a strip photo, or type a batch such as `TG25-1814A Pansid-40`. A caption like "Papa's BP tablet" becomes the medicine's label.
+- **Cabinet:** reply `cabinet` to see every saved medicine with a fresh verdict, `remove 2` to drop one, `हिंदी` or `English` to switch language, and `stop` to delete everything.
+- **Alerts:** when the daily CDSCO sync finds new flagged batches, every cabinet is re-checked and the family is messaged once per finding, in words written by code. After WhatsApp's 24-hour window closes, alerts go out as an approved template.
+- **Secure by default:** webhooks need a valid Meta signature, and repeat deliveries are answered once.
 
-- Send a photo of a strip, or type a batch number such as `TG25-1814A Pansid-40`. The reply is the same check as the web page. A photo caption ("Papa's BP tablet") becomes the medicine's label.
-- Every checked medicine with a batch number is saved to the family's **medicine cabinet**. Reply `cabinet` to see it with a fresh verdict for each, `remove 2` to take one out, `हिंदी` or `English` to switch language, and `stop` to delete everything saved.
-- When the daily CDSCO sync finds new flagged batches, DawaGuard re-checks every cabinet against just those rows and messages the family about any match, once per finding. Alerts are worded by code, because they must be exact. More than 24 hours after the family last wrote, WhatsApp only allows approved templates, so the alert goes as the `dawaguard_batch_alert` template and the details follow when they reply.
-- Webhooks are accepted only with a valid Meta signature (`X-Hub-Signature-256`), and repeated deliveries are answered once.
+The demo uses a Meta test number, which only reaches pre-registered phones, so judges can run the same check on the [web demo](https://dawaguard-3-7-165-100.sslip.io); the video shows the WhatsApp flow.
 
-The demo runs on a Meta test number, which can only message pre-registered phones, so judges can try the same check on the web page; the video shows the WhatsApp flow.
-
-CDSCO publishes alert lists about once a month. To show the alert path in a demo, `POST /api/demo/cdsco-alert` with header `X-Demo-Token` (set `DEMO_TOKEN`) and `{"batchNo": "..."}` simulates a new list containing a saved batch. The alert says it is simulated, and the simulated row is never stored.
-
-## Run locally
+## Run it yourself
 
 Requires Java 21.
 
 ```bash
-cp .env.example .env   # then add NEBIUS_API_KEY and TAVILY_API_KEY
-./mvnw spring-boot:run
+cp .env.example .env   # add NEBIUS_API_KEY and TAVILY_API_KEY
+./mvnw spring-boot:run # then open http://localhost:8080 and tap a sample strip
+./mvnw test            # 28 tests
 ```
 
-Then open `http://localhost:8080` and try a sample strip, or use the API:
+<details>
+<summary><b>API endpoints</b></summary>
 
-- `POST /api/check` (multipart `image`, optional `lang=en|hi`): photo check, streamed as newline-delimited JSON
-- `POST /api/check/typed` (JSON `{"batchNo": "...", "brandName": "...", "lang": "en"}`): check a typed batch number
-- `GET /api/status`: loaded CDSCO data and freshness
-- `GET /api/batches/{batchNo}`: look up a batch number
+- `POST /api/check`: multipart `image`, optional `lang=en|hi`. Photo check, streamed as newline-delimited JSON.
+- `POST /api/check/typed`: JSON `{"batchNo": "...", "brandName": "...", "lang": "en"}`. Check a typed batch number.
+- `GET /api/status`: loaded CDSCO data and freshness.
+- `GET /api/batches/{batchNo}`: look up a batch number.
+- `POST /api/demo/cdsco-alert`: header `X-Demo-Token`, body `{"batchNo": "..."}`. Simulates a new CDSCO list containing a saved batch, for demos. The alert says it is simulated, and the simulated row is never stored. Disabled unless `DEMO_TOKEN` is set.
+- With `DIAGNOSTICS_ENABLED=true` (local only, spends credits): `GET /api/diagnostics/models` and `GET /api/diagnostics/search`.
 
-With `DIAGNOSTICS_ENABLED=true` in `.env` (local only, these spend API credits):
+</details>
 
-- `GET /api/diagnostics/models`: one test call to each Nemotron model
-- `GET /api/diagnostics/search`: one Tavily search
+<details>
+<summary><b>Deploy with HTTPS and WhatsApp</b></summary>
 
-Run the tests with `./mvnw test`.
-
-## Deploy
-
-`deploy/` runs DawaGuard behind Caddy, which obtains the HTTPS certificate WhatsApp webhooks require. The live demo runs this way on a small AWS server in Mumbai. On a Linux server with Docker:
+`deploy/` runs DawaGuard behind Caddy, which obtains the HTTPS certificate that WhatsApp webhooks require. The live demo runs this way on a small AWS server in Mumbai.
 
 ```bash
 git clone https://github.com/Farhan7-tech/dawaguard && cd dawaguard/deploy
-cp ../.env.example .env   # add keys, a strong DB_PASSWORD, and DAWAGUARD_DOMAIN=your.domain
+cp ../.env.example .env   # keys, a strong DB_PASSWORD, DAWAGUARD_DOMAIN=your.domain
 docker compose up -d --build
 ```
 
-Then set the Meta app's webhook to `https://your.domain/webhook/whatsapp` with your `WHATSAPP_VERIFY_TOKEN`, and subscribe to `messages`. The WhatsApp Business Account must also have the app subscribed (`POST /<WABA_ID>/subscribed_apps`), or Meta sends incoming messages nowhere. With a Meta Sandbox test account, only the developer's own (long-lived) user token can send from the sandbox account; a system user token gets error #10. The database (CDSCO copy and cabinets) lives in the `dawaguard-data` volume.
+Then, in your Meta app:
+1. Set the webhook to `https://your.domain/webhook/whatsapp` with your `WHATSAPP_VERIFY_TOKEN`, and subscribe to `messages`.
+2. Subscribe the app to your WhatsApp Business Account (`POST /<WABA_ID>/subscribed_apps`), or incoming messages go nowhere.
+3. With a Meta Sandbox test account, send with the developer's own long-lived user token; a system user token gets error #10.
 
-## Safety and privacy
+The database (CDSCO copy and cabinets) lives in the `dawaguard-data` volume.
 
-- Every paid check is rate-limited per client and per day, so the public demo can't run up costs.
-- Photos are processed in memory and not stored. Uploads are size-checked before decoding.
-- WhatsApp numbers are stored only to send cabinet alerts; `stop` deletes them with the cabinet.
-- Secrets live in `.env` files that are never committed.
+</details>
 
-## Data source
+## Safety, privacy and limits
 
-Flagged batches come from CDSCO's public NSQ and spurious drug alerts ([cdscoonline.gov.in/CDSCO/viewPublicNSQDrug](https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug)). A snapshot (January 2025 to September 2026) ships in `src/main/resources/seed/` so the app works if the CDSCO site is unreachable; the app refreshes from CDSCO daily.
+- Every paid check is rate-limited per client and per day, so the public demo stays free without running up costs.
+- Photos are processed in memory and never stored. WhatsApp numbers are kept only to send cabinet alerts, and `stop` deletes them.
+- A failed test applies to that batch, not to the whole brand or manufacturer.
+- CDSCO publishes each month's list a few weeks later, so the newest failures may not be listed yet.
+- Curved or shiny strips can be misread; DawaGuard shows what it read so you can correct it.
+- DawaGuard is a safety check, not medical advice. Never stop a prescribed medicine without talking to a doctor or pharmacist.
 
-The sample strips in `src/main/resources/static/samples/` are synthetic images rendered by `tools/MakeSampleStrips.java` and watermarked as such. The "failed batch" sample uses a real batch number from CDSCO's January 2026 alert so the match can be demonstrated.
+**Data:** flagged batches come from CDSCO's public [NSQ and spurious drug alerts](https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug). A January 2025 to September 2026 snapshot ships in `src/main/resources/seed/`, so the app works even if the CDSCO site is down, and it refreshes daily. The sample strips are synthetic images watermarked as such; the "failed" sample uses a real batch number from CDSCO's January 2026 alert.
 
-## Limitations
+<br>
 
-- A failed test applies to that specific batch, not to the brand or manufacturer as a whole.
-- CDSCO publishes each month's alert a few weeks later, so the newest failures may not be listed yet.
-- Reading batch numbers from curved or shiny strips can go wrong; DawaGuard shows what it read so you can correct it.
-- DawaGuard is a safety check, not medical advice. Don't stop a prescribed medicine without talking to a doctor or pharmacist.
+<p align="center">
+  <img src="docs/footer.svg" alt="Built with NVIDIA Nemotron on Nebius Token Factory. Made in India for Indian families. Open source under the MIT License." width="100%">
+</p>
 
-## License
-
-[MIT](LICENSE)
+<p align="center">
+  <a href="https://dawaguard-3-7-165-100.sslip.io">Live demo</a> &nbsp;·&nbsp;
+  <a href="https://nebiusglobalaihackathon.devpost.com/">Nebius x NVIDIA Global AI Hackathon</a> &nbsp;·&nbsp;
+  <a href="LICENSE">MIT License</a> &nbsp;·&nbsp;
+  Built by <a href="https://github.com/Farhan7-tech">Mohd Farhan</a>
+</p>
